@@ -9,7 +9,9 @@ This is some proof-of-concept code for doing matrix factorization using TensorFl
 Ratings triplets (COO sparse matrix format) need to be available as a feather file with columns user_id, item_id and rating, where user_id is the zero-based user index, item_id is the zero-based item index, and rating is the rating for the specified (user, item) pair.
 
 The path to the feather file is passed in as the first argument.
+
 Usage:
+
 `python factorizer.py [path/to/triplets.feather] [maximum_iterations] [what_to_learn] [[regularization_parameter] [rank]]`
 
 For example, to learn 5 latent features:
