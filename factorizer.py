@@ -145,6 +145,15 @@ def learn_item_bias_from_fixed_user_bias(ratings_tr, ratings_val, user_bias, num
     regularizer = tf.mul(tf.reduce_sum(tf.square(H)), lda, name="regularize")
     return mf(ratings_tr, ratings_val, W, H_with_user_bias, regularizer, global_mean, max_iter, 0.8)
 
+# Learns factors of the given rank with specified regularization parameter.
+def create_factors_without_biases(num_users, num_items, rank, lda):
+    # Initialize the matrix factors from random normals with mean 0. W will
+    # represent users and H will represent items.
+    W = tf.Variable(tf.truncated_normal([num_users, rank], stddev=0.02, mean=0), name="users")
+    H = tf.Variable(tf.truncated_normal([rank, num_items], stddev=0.02, mean=0), name="items")
+    regularizer = tf.mul(tf.add(tf.reduce_sum(tf.square(W)), tf.reduce_sum(tf.square(H))), lda, name="regularize")
+    return W, H, regularizer
+
 # Given previously learned user bias and item bias vectors, creates
 # tensors to learn factors of the given rank (excluding the bias vectors)
 # and a regularizer.
@@ -164,6 +173,7 @@ def create_factors_with_biases(user_bias, item_bias, rank, lda):
     H_plus_bias = tf.concat(0, [H, tf.ones((1, num_items), name="user_bias_ones", dtype=float32), tf.convert_to_tensor(item_bias, dtype=float32, name="item_bias")])
     regularizer = tf.mul(tf.add(tf.reduce_sum(tf.square(W)), tf.reduce_sum(tf.square(H))), lda, name="regularize")
     return W_plus_bias, H_plus_bias, regularizer
+
 
 # Uses k-fold cross-validation to learn the best regularization
 # parameter to use for either user or item bias.
@@ -246,6 +256,15 @@ def main():
         user_bias = np.load("user_bias.npy").reshape(num_users, 1)
         item_bias = np.load("item_bias.npy").reshape(1, num_items)
         W, H, reg = create_factors_with_biases(user_bias, item_bias, rank, lda)
+        tr, val, finalw, finalh = mf(ratings_tr, ratings_val, W, H, reg, global_mean, max_iter, 1.0, True)
+        print("Final training RMSE %s" % (tr))
+        print("Final validation RMSE %s" % (val))
+        np.save("final_w", finalw)
+        np.save("final_h", finalh)
+    elif to_learn == "features-only":
+        lda = float(sys.argv[4])
+        rank = int(sys.argv[5])
+        W, H, reg = create_factors_without_biases(num_users, num_items, rank, lda)
         tr, val, finalw, finalh = mf(ratings_tr, ratings_val, W, H, reg, global_mean, max_iter, 1.0, True)
         print("Final training RMSE %s" % (tr))
         print("Final validation RMSE %s" % (val))
