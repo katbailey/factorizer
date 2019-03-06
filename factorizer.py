@@ -11,8 +11,8 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 import feather
-from sklearn.cross_validation import train_test_split
-from sklearn.cross_validation import StratifiedKFold
+from sklearn.model_selection import train_test_split
+from sklearn.model_selection import StratifiedKFold
 
 # Given a set of ratings, 2 matrix factors that include one or more
 # trainable variables, and a regularizer, uses gradient descent to
